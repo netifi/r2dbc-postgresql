@@ -19,6 +19,7 @@ package io.r2dbc.postgresql.message.backend;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.r2dbc.postgresql.util.Assert;
 import reactor.core.publisher.Flux;
@@ -82,7 +83,7 @@ public final class BackendMessageDecoder {
                         sink.next(CommandComplete.decode(body));
                         break;
                     case COPY_DATA:
-                        sink.next(CopyData.decode(body));
+                        sink.next(CopyData.decode(copy(body)));
                         break;
                     case COPY_DONE:
                         sink.next(CopyDone.INSTANCE);
@@ -97,7 +98,7 @@ public final class BackendMessageDecoder {
                         sink.next(CopyOutResponse.decode(body));
                         break;
                     case DATA_ROW:
-                        sink.next(DataRow.decode(body));
+                        sink.next(DataRow.decode(copy(body)));
                         break;
                     case EMPTY_QUERY_RESPONSE:
                         sink.next(EmptyQueryResponse.INSTANCE);
@@ -106,7 +107,7 @@ public final class BackendMessageDecoder {
                         sink.next(ErrorResponse.decode(body));
                         break;
                     case FUNCTION_CALL_RESPONSE:
-                        sink.next(FunctionCallResponse.decode(body));
+                        sink.next(FunctionCallResponse.decode(copy(body)));
                         break;
                     case NO_DATA:
                         sink.next(NoData.INSTANCE);
@@ -168,10 +169,10 @@ public final class BackendMessageDecoder {
                 sink.next(AuthenticationGSS.INSTANCE);
                 break;
             case GSS_CONTINUE:
-                sink.next(AuthenticationGSSContinue.decode(in));
+                sink.next(AuthenticationGSSContinue.decode(copy(in)));
                 break;
             case MD5_PASSWORD:
-                sink.next(AuthenticationMD5Password.decode(in));
+                sink.next(AuthenticationMD5Password.decode(copy(in)));
                 break;
             case SCMC_CREDENTIAL:
                 sink.next(AuthenticationSCMCredential.INSTANCE);
@@ -180,10 +181,10 @@ public final class BackendMessageDecoder {
                 sink.next(AuthenticationSASL.decode(in));
                 break;
             case SASL_CONTINUE:
-                sink.next(AuthenticationSASLContinue.decode(in));
+                sink.next(AuthenticationSASLContinue.decode(copy(in)));
                 break;
             case SASL_FINAL:
-                sink.next(AuthenticationSASLFinal.decode(in));
+                sink.next(AuthenticationSASLFinal.decode(copy(in)));
                 break;
             case SSPI:
                 sink.next(AuthenticationSSPI.INSTANCE);
@@ -267,4 +268,7 @@ public final class BackendMessageDecoder {
 
     }
 
+    static ByteBuf copy(ByteBuf byteBuf) {
+        return Unpooled.copiedBuffer(byteBuf);
+    }
 }
